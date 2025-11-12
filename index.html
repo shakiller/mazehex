@@ -64,23 +64,51 @@
   }
 
   .hex-start .hex-inner {
-    background-color: #d9fbe2;
+    background-color: rgba(47, 157, 93, 0.3);
     border: 2px solid #2f9d5d;
   }
 
   .hex-finish .hex-inner {
-    background-color: #ffe5e0;
-    border: 2px solid #ff6347;
+    background-color: rgba(47, 157, 93, 0.3);
+    border: 2px solid #2f9d5d;
   }
 
   .hex-start-player-2 .hex-inner {
-    background-color: #e0e8ff;
+    background-color: rgba(65, 105, 225, 0.3);
     border: 2px solid #4169e1;
   }
 
   .hex-finish-player-2 .hex-inner {
-    background-color: #f0e0ff;
-    border: 2px solid #8a2be2;
+    background-color: rgba(65, 105, 225, 0.3);
+    border: 2px solid #4169e1;
+  }
+
+  .hex-start.current-player-turn,
+  .hex-finish.current-player-turn {
+    animation: playerTurnPulse1 0.9s ease-in-out infinite;
+  }
+
+  .hex-start-player-2.current-player-turn,
+  .hex-finish-player-2.current-player-turn {
+    animation: playerTurnPulse2 0.9s ease-in-out infinite;
+  }
+
+  @keyframes playerTurnPulse1 {
+    0%, 100% {
+      background-color: #000e87;
+    }
+    50% {
+      background-color: #2f9d5d;
+    }
+  }
+
+  @keyframes playerTurnPulse2 {
+    0%, 100% {
+      background-color: #000e87;
+    }
+    50% {
+      background-color: #4169e1;
+    }
   }
 
   .part {
@@ -252,21 +280,52 @@
   }
 
   .mode-switcher {
-    margin-top: 18px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
   }
 
-  .mode-switcher label {
+  .mode-button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    font-size: 14px;
     font-weight: bold;
+    background-color: #f0f0f0;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
-  .mode-switcher select {
-    padding: 6px 10px;
+  .mode-button:hover {
+    background-color: #e0e0e0;
+  }
+
+  .mode-button.active {
+    background-color: #2f9d5d;
+    color: white;
+    border-color: #2f9d5d;
+  }
+
+  .restart-button {
+    padding: 10px 20px;
     border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+    border: 2px solid #2f9d5d;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #2f9d5d;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+  }
+
+  .restart-button:hover {
+    background-color: #25804a;
+    border-color: #25804a;
   }
 
   .turn-indicator {
@@ -345,6 +404,15 @@
 <p>Соедините старт и финиш, выкладывая части лабиринта.</p>
 
 <div class="game-container">
+  <div class="mode-switcher">
+    <button id="modeButtonSingle" class="mode-button active" data-mode="single">Один игрок</button>
+    <button id="modeButtonTwo" class="mode-button" data-mode="two">Два игрока</button>
+  </div>
+
+  <div style="text-align: center;">
+    <button id="restartButton" class="restart-button">Старт</button>
+  </div>
+
   <div id="grid" class="hex-grid"></div>
 
   <div class="controls">
@@ -354,14 +422,6 @@
       <span>Следующая деталь:</span>
       <div id="nextPiece" class="preview-hex"></div>
     </div>
-  </div>
-
-  <div class="mode-switcher">
-    <label for="modeSelector">Режим:</label>
-    <select id="modeSelector">
-      <option value="single">Один игрок</option>
-      <option value="two">Два игрока</option>
-    </select>
   </div>
 
   <div id="turnIndicator" class="turn-indicator"></div>
@@ -377,7 +437,9 @@
   const placeButton = document.getElementById("placeButton");
   const previewContainer = document.getElementById("nextPiece");
   const debugContainer = document.getElementById("debugPieces");
-  const modeSelector = document.getElementById("modeSelector");
+  const modeButtonSingle = document.getElementById("modeButtonSingle");
+  const modeButtonTwo = document.getElementById("modeButtonTwo");
+  const restartButton = document.getElementById("restartButton");
   const turnIndicator = document.getElementById("turnIndicator");
   const statusContainer = document.getElementById("statusContainer");
   const connectionStatusEl = document.getElementById("connectionStatus");
@@ -456,11 +518,29 @@
   grid.style.height = `${rows * yStep + hexH}px`;
 
   renderDebugPieces();
-  modeSelector.addEventListener("change", (event) => {
-    setupGameMode(event.target.value);
+
+  modeButtonSingle.addEventListener("click", () => {
+    setActiveModeButton(modeButtonSingle);
+    setupGameMode("single");
   });
 
-  setupGameMode(modeSelector.value || "single");
+  modeButtonTwo.addEventListener("click", () => {
+    setActiveModeButton(modeButtonTwo);
+    setupGameMode("two");
+  });
+
+  restartButton.addEventListener("click", () => {
+    setupGameMode(gameMode);
+    restartButton.textContent = "Рестарт";
+  });
+
+  function setActiveModeButton(activeButton) {
+    modeButtonSingle.classList.remove("active");
+    modeButtonTwo.classList.remove("active");
+    activeButton.classList.add("active");
+  }
+
+  setupGameMode("single");
 
   function selectHex(hex) {
     if (selectedHex) selectedHex.classList.remove("selected");
@@ -591,9 +671,6 @@
 
   function setupGameMode(mode) {
     gameMode = mode;
-    if (modeSelector && modeSelector.value !== mode) {
-      modeSelector.value = mode;
-    }
     currentPlayerIndex = 0;
     players = createPlayersForMode(mode);
     rebuildStatusUI();
@@ -601,6 +678,7 @@
     initEndpointsForPlayers();
     refreshConnectionState();
     updateTurnIndicator();
+    updatePlayerTurnHighlight();
   }
 
   function createPlayersForMode(mode) {
@@ -987,6 +1065,30 @@
       if (!player.statusEl) return;
       player.statusEl.classList.toggle("current-turn", players.length > 1 && index === currentPlayerIndex);
     });
+
+    updatePlayerTurnHighlight();
+  }
+
+  function updatePlayerTurnHighlight() {
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const hex = hexElements[row][col];
+        if (!hex) continue;
+        hex.classList.remove("current-player-turn");
+      }
+    }
+
+    if (players.length > 1 && currentPlayerIndex < players.length) {
+      const currentPlayer = players[currentPlayerIndex];
+      if (currentPlayer && currentPlayer.startPosition) {
+        const startHex = hexElements[currentPlayer.startPosition.row]?.[currentPlayer.startPosition.col];
+        if (startHex) startHex.classList.add("current-player-turn");
+      }
+      if (currentPlayer && currentPlayer.finishPosition) {
+        const finishHex = hexElements[currentPlayer.finishPosition.row]?.[currentPlayer.finishPosition.col];
+        if (finishHex) finishHex.classList.add("current-player-turn");
+      }
+    }
   }
 
   function advanceTurn() {
