@@ -45,11 +45,11 @@
 
   .hex-inner {
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: calc(100% - 6px);
-    height: calc(100% - 6px);
-    background-color: #f0f0f0;
+    top: 2px;
+    left: 2px;
+    width: calc(100% - 3px);
+    height: calc(100% - 3px);
+    background-color: #000e87;
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     pointer-events: none;
     transition: background 0.2s;
@@ -65,10 +65,22 @@
 
   .hex-start .hex-inner {
     background-color: #d9fbe2;
+    border: 2px solid #2f9d5d;
   }
 
   .hex-finish .hex-inner {
     background-color: #ffe5e0;
+    border: 2px solid #ff6347;
+  }
+
+  .hex-start-player-2 .hex-inner {
+    background-color: #e0e8ff;
+    border: 2px solid #4169e1;
+  }
+
+  .hex-finish-player-2 .hex-inner {
+    background-color: #f0e0ff;
+    border: 2px solid #8a2be2;
   }
 
   .part {
@@ -109,7 +121,7 @@
     width: 14px;
     height: 28px;
     background-color: #66ccff;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
     transition: border-radius 0.2s;
     transform-origin: 50% 100%;
   }
@@ -120,7 +132,7 @@
     height: 14px;
     background-color: inherit;
     left: 50%;
-    top: 50%;
+    top: 35%;
     transform: translate(-50%, -100%);
     border-radius: 50%;
   }
@@ -173,27 +185,58 @@
   }
 
   .marker {
+    width: 50px;
     position: absolute;
-    width: 140px;
-    height: 30px;
-    line-height: 30px;
-    background-color: rgba(255, 99, 71, 0.1);
-    border: 2px dashed #ff6347;
-    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 12px;
     font-weight: bold;
-    color: #ff6347;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: 14px;
+    border: 2px dashed #999;
+    background-color: rgba(153, 153, 153, 0.12);
+    color: #555;
     pointer-events: none;
+    white-space: wrap;
+    z-index: 2;
+  }
+
+  .marker-top {
+    transform: translate(-50%, -110%);
+  }
+
+  .marker-bottom {
+    transform: translate(-50%, 10%);
+  }
+
+  .marker-left {
+    transform: translate(-110%, -50%);
+  }
+
+  .marker-right {
+    transform: translate(10%, -50%);
   }
 
   .marker-start {
-    top: -40px;
+    border-color: #2f9d5d;
+    background-color: rgba(47, 157, 93, 0.12);
+    color: #2f9d5d;
   }
 
   .marker-finish {
-    bottom: -40px;
+    border-color: #ff6347;
+    background-color: rgba(255, 99, 71, 0.12);
+    color: #ff6347;
+  }
+
+  .marker-player-2.marker-start {
+    border-color: #4169e1;
+    background-color: rgba(65, 105, 225, 0.15);
+    color: #3052c8;
+  }
+
+  .marker-player-2.marker-finish {
+    border-color: #8a2be2;
+    background-color: rgba(138, 43, 226, 0.15);
+    color: #6c1fb5;
   }
 
   .connection-status {
@@ -206,6 +249,73 @@
 
   .connection-status.connected {
     color: #2f9d5d;
+  }
+
+  .mode-switcher {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mode-switcher label {
+    font-weight: bold;
+  }
+
+  .mode-switcher select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  .turn-indicator {
+    margin-top: 12px;
+    font-weight: bold;
+    font-size: 18px;
+    color: #2f9d5d;
+    padding: 8px 16px;
+    background-color: rgba(47, 157, 93, 0.1);
+    border-radius: 8px;
+    border: 2px solid #2f9d5d;
+    min-height: 1.5em;
+  }
+
+  .status-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .player-status {
+    font-size: 14px;
+    color: #777;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .player-status.connected {
+    background-color: rgba(47, 157, 93, 0.15);
+    color: #2f9d5d;
+  }
+
+  .player-status.current-turn {
+    border: 1px solid #2f9d5d;
+    box-shadow: 0 0 6px rgba(47, 157, 93, 0.25);
+  }
+
+  .player-status.player-2.connected {
+    background-color: rgba(65, 105, 225, 0.18);
+    color: #3052c8;
+  }
+
+  .player-status.player-2.current-turn {
+    border: 1px solid #4169e1;
+    box-shadow: 0 0 6px rgba(65, 105, 225, 0.25);
   }
 
   @keyframes pathBlink {
@@ -224,6 +334,7 @@
   .connector.path-highlight,
   .connector-tip.path-highlight {
     animation: pathBlink 0.9s ease-in-out infinite;
+    animation-delay: var(--path-delay, 0s);
     filter: brightness(1.1);
   }
 </style>
@@ -245,6 +356,16 @@
     </div>
   </div>
 
+  <div class="mode-switcher">
+    <label for="modeSelector">Режим:</label>
+    <select id="modeSelector">
+      <option value="single">Один игрок</option>
+      <option value="two">Два игрока</option>
+    </select>
+  </div>
+
+  <div id="turnIndicator" class="turn-indicator"></div>
+  <div id="statusContainer" class="status-container"></div>
   <div id="connectionStatus" class="connection-status"></div>
 </div>
 
@@ -256,8 +377,10 @@
   const placeButton = document.getElementById("placeButton");
   const previewContainer = document.getElementById("nextPiece");
   const debugContainer = document.getElementById("debugPieces");
+  const modeSelector = document.getElementById("modeSelector");
+  const turnIndicator = document.getElementById("turnIndicator");
+  const statusContainer = document.getElementById("statusContainer");
   const connectionStatusEl = document.getElementById("connectionStatus");
-  const MARKER_WIDTH = 140;
 
   const rows = 9;
   const cols = 9;
@@ -281,10 +404,20 @@
     5: 2,
     6: 3,
   };
+  const EDGE_DIRECTIONS = {
+    top: 4,
+    bottom: 1,
+    left: 3,
+    right: 5,
+  };
 
   let selectedHex = null;
   let currentRotation = 0;
   let previewPart = null;
+  let nextPiece = null;
+  let gameMode = "single";
+  let players = [];
+  let currentPlayerIndex = 0;
 
   const pieces = [
     [1,2], [1,3], [1,4],
@@ -296,15 +429,7 @@
   const hexElements = Array.from({ length: rows }, () => Array(cols).fill(null));
   const gridState = Array.from({ length: rows }, () => Array(cols).fill(null));
   const blockedCells = new Set();
-  let startMarkerEl = null;
-  let finishMarkerEl = null;
-  let startPosition = null;
-  let finishPosition = null;
   let pathHighlightNodes = new Set();
-
-  let nextPiece = randomPiece();
-  renderPreview(nextPiece);
-  renderDebugPieces();
 
   // --- создание гексагонального поля ---
   for (let row = 0; row < rows; row++) {
@@ -329,9 +454,13 @@
   // динамически устанавливаем размер контейнера
   grid.style.width = `${cols * xStep + hexW/2}px`;
   grid.style.height = `${rows * yStep + hexH}px`;
-  createMarkers();
-  initEndpoints();
-  refreshConnectionState();
+
+  renderDebugPieces();
+  modeSelector.addEventListener("change", (event) => {
+    setupGameMode(event.target.value);
+  });
+
+  setupGameMode(modeSelector.value || "single");
 
   function selectHex(hex) {
     if (selectedHex) selectedHex.classList.remove("selected");
@@ -352,14 +481,15 @@
 
   function placePiece() {
     if (!selectedHex) return;
-    const col = Number(selectedHex.dataset.x);
-    const row = Number(selectedHex.dataset.y);
+    const targetHex = selectedHex;
+    const col = Number(targetHex.dataset.x);
+    const row = Number(targetHex.dataset.y);
     if (isBlockedCell(row, col)) return;
     const rotationSteps = getCurrentRotationSteps();
     const rotatedDirections = getRotatedDirections(nextPiece, rotationSteps);
     const part = createPieceElement(nextPiece, rotationSteps);
     part.style.transform = `rotate(${currentRotation}deg)`;
-    const inner = selectedHex.querySelector(".hex-inner");
+    const inner = targetHex.querySelector(".hex-inner");
     inner.innerHTML = "";
     inner.appendChild(part);
 
@@ -374,7 +504,13 @@
     nextPiece = randomPiece();
     currentRotation = 0;
     renderPreview(nextPiece);
+    if (targetHex) {
+      targetHex.classList.remove("selected");
+    }
+    selectedHex = null;
+
     refreshConnectionState();
+    advanceTurn();
   }
 
   rotateButton.addEventListener("click", rotatePiece);
@@ -413,6 +549,10 @@
 
   function renderPreview(pieceDefinition) {
     previewContainer.innerHTML = "";
+    if (!pieceDefinition) {
+      previewPart = null;
+      return;
+    }
     const rotationSteps = getCurrentRotationSteps();
     previewPart = createPieceElement(pieceDefinition, rotationSteps);
     previewPart.style.transform = `rotate(${currentRotation}deg)`;
@@ -449,72 +589,338 @@
     });
   }
 
-  function refreshConnectionState() {
-    const connection = checkConnection();
-    updateConnectionStatus(connection.connected);
-    highlightConnectionPath(connection.segments);
+  function setupGameMode(mode) {
+    gameMode = mode;
+    if (modeSelector && modeSelector.value !== mode) {
+      modeSelector.value = mode;
+    }
+    currentPlayerIndex = 0;
+    players = createPlayersForMode(mode);
+    rebuildStatusUI();
+    resetBoardState();
+    initEndpointsForPlayers();
+    refreshConnectionState();
+    updateTurnIndicator();
   }
 
-  function updateConnectionStatus(isConnected) {
-    if (!connectionStatusEl) return;
-    if (isConnected) {
-      connectionStatusEl.textContent = "Старт и финиш соединены!";
-      connectionStatusEl.classList.add("connected");
+  function createPlayersForMode(mode) {
+    if (mode === "two") {
+      return [
+        { id: 1, name: "Игрок 1", startEdge: "top", finishEdge: "bottom", markers: { start: null, finish: null }, connected: false, statusEl: null, startPosition: null, finishPosition: null },
+        { id: 2, name: "Игрок 2", startEdge: "bottom", finishEdge: "top", markers: { start: null, finish: null }, connected: false, statusEl: null, startPosition: null, finishPosition: null },
+      ];
+    }
+
+    return [
+      { id: 1, name: "Игрок 1", startEdge: "top", finishEdge: "bottom", markers: { start: null, finish: null }, connected: false, statusEl: null, startPosition: null, finishPosition: null },
+    ];
+  }
+
+  function rebuildStatusUI() {
+    if (!statusContainer) return;
+    statusContainer.innerHTML = "";
+    players.forEach((player) => {
+      const statusEl = document.createElement("div");
+      statusEl.classList.add("player-status", `player-${player.id}`);
+      statusContainer.appendChild(statusEl);
+      player.statusEl = statusEl;
+      updatePlayerStatus(player, false);
+    });
+  }
+
+  function resetBoardState() {
+    clearPathHighlights();
+    blockedCells.clear();
+    if (selectedHex) {
+      selectedHex.classList.remove("selected");
+      selectedHex = null;
+    }
+
+    players.forEach((player) => {
+      player.connected = false;
+      player.startPosition = null;
+      player.finishPosition = null;
+      player.markers = { start: null, finish: null };
+      updatePlayerStatus(player, false);
+    });
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        gridState[row][col] = null;
+        const hex = hexElements[row][col];
+        if (!hex) continue;
+        hex.classList.remove("hex-start", "hex-finish", "hex-start-player-1", "hex-finish-player-1", "hex-start-player-2", "hex-finish-player-2", "selected");
+        hex.removeAttribute("data-player");
+        const inner = hex.querySelector(".hex-inner");
+        if (inner) inner.innerHTML = "";
+      }
+    }
+
+    clearMarkers();
+
+    nextPiece = randomPiece();
+    currentRotation = 0;
+    renderPreview(nextPiece);
+  }
+
+  function clearMarkers() {
+    if (!grid) return;
+    grid.querySelectorAll(".marker").forEach((node) => node.remove());
+    players.forEach((player) => {
+      player.markers = { start: null, finish: null };
+    });
+  }
+
+  function initEndpointsForPlayers() {
+    players.forEach((player) => {
+      placeEndpointForPlayer(player, "start");
+    });
+    players.forEach((player) => {
+      placeEndpointForPlayer(player, "finish");
+    });
+  }
+
+  function placeEndpointForPlayer(player, kind) {
+    const edge = kind === "start" ? player.startEdge : player.finishEdge;
+    const { row, col, direction } = getRandomEdgeCell(edge);
+    const hex = hexElements[row][col];
+    if (!hex) return;
+
+    const inner = hex.querySelector(".hex-inner");
+    if (inner) inner.innerHTML = "";
+
+    const part = createPieceElement([direction], 0);
+    part.style.transform = "rotate(0deg)";
+    inner.appendChild(part);
+
+    gridState[row][col] = {
+      piece: [direction],
+      rotation: 0,
+      directions: [direction],
+      endpoint: kind,
+      playerId: player.id,
+    };
+
+    const baseClass = kind === "start" ? "hex-start" : "hex-finish";
+    hex.classList.add(baseClass);
+    hex.classList.add(`${baseClass}-player-${player.id}`);
+    hex.dataset.player = player.id;
+
+    if (kind === "start") {
+      player.startPosition = { row, col };
     } else {
-      connectionStatusEl.textContent = "Соедините старт и финиш";
+      player.finishPosition = { row, col };
+    }
+
+    markBlocked(row, col);
+    updateConnectionsAround(row, col);
+    attachMarker(player, kind, row, col);
+  }
+
+  function getRandomEdgeCell(edge) {
+    const direction = EDGE_DIRECTIONS[edge] || 4;
+    const candidates = [];
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        let isEdge = false;
+        if (edge === "top" && row === 0) {
+          isEdge = true;
+        } else if (edge === "bottom" && row === rows - 1) {
+          isEdge = true;
+        } else if (edge === "left" && col === 0) {
+          isEdge = true;
+        } else if (edge === "right" && col === cols - 1) {
+          isEdge = true;
+        }
+
+        if (isEdge && !isBlockedCell(row, col)) {
+          candidates.push({ row, col });
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      if (edge === "top") {
+        return { row: 0, col: Math.floor(cols / 2), direction };
+      } else if (edge === "bottom") {
+        return { row: rows - 1, col: Math.floor(cols / 2), direction };
+      } else if (edge === "left") {
+        return { row: Math.floor(rows / 2), col: 0, direction };
+      } else {
+        return { row: Math.floor(rows / 2), col: cols - 1, direction };
+      }
+    }
+
+    const selected = candidates[Math.floor(Math.random() * candidates.length)];
+    return { row: selected.row, col: selected.col, direction };
+  }
+
+  function attachMarker(player, kind, row, col) {
+    if (!grid) return;
+    if (!player.markers) {
+      player.markers = { start: null, finish: null };
+    }
+
+    if (player.markers[kind]) {
+      player.markers[kind].remove();
+    }
+
+    const marker = document.createElement("div");
+    marker.classList.add("marker", kind === "start" ? "marker-start" : "marker-finish", `marker-player-${player.id}`);
+
+    const orientation = getMarkerOrientation(row, col);
+    marker.classList.add(`marker-${orientation}`);
+    marker.textContent = `${player.name}: ${kind === "start" ? "старт" : "финиш"}`;
+
+    const hex = hexElements[row][col];
+    if (!hex) return;
+    const left = parseFloat(hex.style.left) || 0;
+    const top = parseFloat(hex.style.top) || 0;
+
+    switch (orientation) {
+      case "top":
+        marker.style.left = `${left + hexW / 2}px`;
+        marker.style.top = `${top}px`;
+        break;
+      case "bottom":
+        marker.style.left = `${left + hexW / 2}px`;
+        marker.style.top = `${top + hexH}px`;
+        break;
+      case "left":
+        marker.style.left = `${left}px`;
+        marker.style.top = `${top + hexH / 2}px`;
+        break;
+      case "right":
+        marker.style.left = `${left + hexW}px`;
+        marker.style.top = `${top + hexH / 2}px`;
+        break;
+      default:
+        marker.style.left = `${left + hexW / 2}px`;
+        marker.style.top = `${top}px`;
+    }
+
+    grid.appendChild(marker);
+    player.markers[kind] = marker;
+  }
+
+  function getMarkerOrientation(row, col) {
+    if (row === 0) return "top";
+    if (row === rows - 1) return "bottom";
+    if (col === 0) return "left";
+    if (col === cols - 1) return "right";
+    return "top";
+  }
+
+  function refreshConnectionState() {
+    clearPathHighlights();
+    let connectedCount = 0;
+
+    players.forEach((player, index) => {
+      const result = checkConnection(player);
+      player.connected = result.connected;
+      updatePlayerStatus(player, result.connected);
+      if (result.connected) {
+        connectedCount += 1;
+        highlightConnectionPath(result.segments, index);
+      }
+    });
+
+    updateConnectionStatus(connectedCount);
+    updateTurnIndicator();
+  }
+
+  function updatePlayerStatus(player, connected) {
+    if (!player.statusEl) return;
+    player.statusEl.textContent = `${player.name}: ${connected ? "маршрут готов" : "маршрут не готов"}`;
+    player.statusEl.classList.toggle("connected", connected);
+  }
+
+  function updateConnectionStatus(connectedCount) {
+    if (!connectionStatusEl) return;
+
+    if (players.length <= 1) {
+      if (connectedCount > 0) {
+        connectionStatusEl.textContent = "Старт и финиш соединены!";
+        connectionStatusEl.classList.add("connected");
+      } else {
+        connectionStatusEl.textContent = "Соедините старт и финиш";
+        connectionStatusEl.classList.remove("connected");
+      }
+      return;
+    }
+
+    if (connectedCount === players.length && players.length > 0) {
+      connectionStatusEl.textContent = "Оба маршрута построены!";
+      connectionStatusEl.classList.add("connected");
+    } else if (connectedCount === 0) {
+      connectionStatusEl.textContent = "Соедините маршруты обоих игроков";
+      connectionStatusEl.classList.remove("connected");
+    } else {
+      const names = players.filter((player) => player.connected).map((player) => player.name).join(", ");
+      connectionStatusEl.textContent = `${names} завершили маршрут`;
       connectionStatusEl.classList.remove("connected");
     }
   }
 
-  function highlightConnectionPath(segments = []) {
-    clearPathHighlights();
+  function highlightConnectionPath(segments = [], playerIndex = 0) {
     if (!segments || segments.length === 0) return;
 
-    segments.forEach(({ from, to, direction }) => {
+    const delayStep = 0.18;
+    const baseOffset = playerIndex * 0.35;
+
+    segments.forEach(({ from, to, direction }, index) => {
+      const baseDelay = baseOffset + index * delayStep;
       const connector = getConnectorElement(from.row, from.col, direction);
       if (connector) {
-        addHighlight(connector);
+        addHighlight(connector, baseDelay);
         const tip = connector.querySelector(".connector-tip");
-        addHighlight(tip);
+        addHighlight(tip, baseDelay + delayStep * 0.4);
       }
 
-      const neighbor = to;
-      if (!neighbor || !isInside(neighbor.row, neighbor.col)) return;
+      if (!to || !isInside(to.row, to.col)) return;
       const opposite = OPPOSITE_DIRECTION[direction];
-      const neighborConnector = getConnectorElement(neighbor.row, neighbor.col, opposite);
+      const neighborConnector = getConnectorElement(to.row, to.col, opposite);
       if (neighborConnector) {
-        addHighlight(neighborConnector);
+        const neighborDelay = baseDelay + delayStep * 0.6;
+        addHighlight(neighborConnector, neighborDelay);
         const tip = neighborConnector.querySelector(".connector-tip");
-        addHighlight(tip);
+        addHighlight(tip, neighborDelay + delayStep * 0.4);
       }
     });
   }
 
-  function addHighlight(node) {
+  function addHighlight(node, delay = 0) {
     if (!node) return;
     node.classList.add("path-highlight");
+    node.style.setProperty("--path-delay", `${delay}s`);
+    node.style.animationDelay = `${delay}s`;
     pathHighlightNodes.add(node);
   }
 
   function clearPathHighlights() {
-    pathHighlightNodes.forEach((node) => node.classList.remove("path-highlight"));
+    pathHighlightNodes.forEach((node) => {
+      node.classList.remove("path-highlight");
+      node.style.removeProperty("--path-delay");
+      node.style.animationDelay = "";
+    });
     pathHighlightNodes.clear();
   }
 
-  function checkConnection() {
-    if (!startPosition || !finishPosition) {
+  function checkConnection(player) {
+    if (!player.startPosition || !player.finishPosition) {
       return { connected: false, segments: [] };
     }
 
-    const startKey = cellKey(startPosition.row, startPosition.col);
-    const finishKey = cellKey(finishPosition.row, finishPosition.col);
-    const startState = gridState[startPosition.row]?.[startPosition.col];
+    const startKey = cellKey(player.startPosition.row, player.startPosition.col);
+    const finishKey = cellKey(player.finishPosition.row, player.finishPosition.col);
+    const startState = gridState[player.startPosition.row]?.[player.startPosition.col];
     if (!startState) {
       return { connected: false, segments: [] };
     }
 
     const visited = new Set([startKey]);
-    const queue = [{ row: startPosition.row, col: startPosition.col }];
+    const queue = [{ row: player.startPosition.row, col: player.startPosition.col }];
     const prev = new Map();
     prev.set(startKey, null);
 
@@ -561,80 +967,39 @@
     return { connected: false, segments: [] };
   }
 
-  function initEndpoints() {
-    const startCol = Math.floor(Math.random() * cols);
-    const finishCol = Math.floor(Math.random() * cols);
-    placeEndpoint(0, startCol, [4], "start");
-    placeEndpoint(rows - 1, finishCol, [1], "finish");
-  }
+  function updateTurnIndicator() {
+    if (!turnIndicator) return;
 
-  function placeEndpoint(row, col, directions, type) {
-    if (!isInside(row, col)) return;
-    const hex = hexElements[row][col];
-    if (!hex) return;
-    const inner = hex.querySelector(".hex-inner");
-    inner.innerHTML = "";
-
-    const part = createPieceElement(directions, 0);
-    part.style.transform = "rotate(0deg)";
-    inner.appendChild(part);
-
-    const endpointState = {
-      piece: directions.slice(),
-      rotation: 0,
-      directions: directions.slice(),
-      endpoint: type,
-    };
-    gridState[row][col] = endpointState;
-
-    if (type === "start") {
-      hex.classList.add("hex-start");
-      startPosition = { row, col };
-      positionMarker(startMarkerEl, row, col);
+    if (players.length <= 1) {
+      turnIndicator.textContent = "Одиночный режим";
+      turnIndicator.style.display = "none";
     } else {
-      hex.classList.add("hex-finish");
-      finishPosition = { row, col };
-      positionMarker(finishMarkerEl, row, col);
+      turnIndicator.style.display = "block";
+      const player = players[currentPlayerIndex];
+      if (player) {
+        turnIndicator.textContent = `Ходит: ${player.name}`;
+      } else {
+        turnIndicator.textContent = "Ожидание...";
+      }
     }
 
-    markBlocked(row, col);
-    updateConnectionsAround(row, col);
-    refreshConnectionState();
+    players.forEach((player, index) => {
+      if (!player.statusEl) return;
+      player.statusEl.classList.toggle("current-turn", players.length > 1 && index === currentPlayerIndex);
+    });
   }
 
-  function createMarkers() {
-    const existingMarkers = grid.querySelectorAll(".marker");
-    existingMarkers.forEach((node) => node.remove());
-
-    startMarkerEl = document.createElement("div");
-    startMarkerEl.classList.add("marker", "marker-start");
-    startMarkerEl.textContent = "Старт";
-    grid.appendChild(startMarkerEl);
-
-    finishMarkerEl = document.createElement("div");
-    finishMarkerEl.classList.add("marker", "marker-finish");
-    finishMarkerEl.textContent = "Финиш";
-    grid.appendChild(finishMarkerEl);
+  function advanceTurn() {
+    if (players.length <= 1) {
+      updateTurnIndicator();
+      return;
+    }
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+    updateTurnIndicator();
   }
 
-  function positionMarker(markerEl, row, col) {
-    if (!markerEl) return;
-    const hex = hexElements[row][col];
-    if (!hex) return;
-    const left = parseFloat(hex.style.left) || 0;
-    const gridWidth = cols * xStep + hexW / 2;
-    const markerWidth = markerEl.offsetWidth || MARKER_WIDTH;
-    let markerLeft = left + hexW / 2 - markerWidth / 2;
-    markerLeft = Math.max(0, Math.min(markerLeft, gridWidth - markerWidth));
-    markerEl.style.left = `${markerLeft}px`;
-  }
-
-  function markBlocked(row, col) {
-    blockedCells.add(cellKey(row, col));
-  }
-
-  function isBlockedCell(row, col) {
-    return blockedCells.has(cellKey(row, col));
+  function currentPlayer() {
+    return players[currentPlayerIndex] || null;
   }
 
   function cellKey(row, col) {
@@ -644,6 +1009,14 @@
   function keyToCoord(key) {
     const [row, col] = key.split(",").map(Number);
     return { row, col };
+  }
+
+  function markBlocked(row, col) {
+    blockedCells.add(cellKey(row, col));
+  }
+
+  function isBlockedCell(row, col) {
+    return blockedCells.has(cellKey(row, col));
   }
 
   function getRotatedDirections(pieceDefinition, rotationSteps = 0) {
@@ -748,7 +1121,7 @@
   }
 
   function unblockCell(row, col) {
-    blockedCells.delete(`${row},${col}`);
+    blockedCells.delete(cellKey(row, col));
     const hex = hexElements[row][col];
     if (hex) {
       hex.classList.remove("blocked");
