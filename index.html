@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гексагональная игра</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #fdfdfd;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 5px;
+  }
+
+  p {
+    margin-top: 0;
+  }
+
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Контейнер с шестиугольниками */
+  .hex-grid {
+    position: relative;
+    margin-top: 20px;
+  }
+
+  .hex {
+    position: absolute;
+    width: 80px;
+    height: 92px; /* немного выше, чтобы форма не сплющивалась */
+    background-color: #f0f0f0;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  .hex:hover {
+    background: #e0e0e0;
+  }
+
+  .hex.selected {
+    outline: 3px solid #ff6347;
+  }
+
+  .part {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    background-color: #66ccff;
+    border-radius: 50%;
+    top: 25%;
+    left: 25%;
+    transition: transform 0.3s;
+  }
+
+  .controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .preview-hex {
+    width: 80px;
+    height: 92px;
+    background-color: #ddd;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    position: relative;
+    margin-top: 10px;
+  }
+
+  .preview .part {
+    background-color: #66ccff;
+  }
+
+</style>
+</head>
+<body>
+
+<h1>Гексагональная игра</h1>
+<p>Соедините старт и финиш, выкладывая части лабиринта.</p>
+
+<div class="game-container">
+  <div id="grid" class="hex-grid"></div>
+
+  <div class="controls">
+    <button id="rotateButton">Повернуть (R)</button>
+    <button id="placeButton">Поставить деталь</button>
+    <div class="preview">
+      <span>Следующая деталь:</span>
+      <div id="nextPiece" class="preview-hex">
+        <div class="part"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const grid = document.getElementById("grid");
+  const rotateButton = document.getElementById("rotateButton");
+  const placeButton = document.getElementById("placeButton");
+  const nextPieceEl = document.getElementById("nextPiece").querySelector(".part");
+
+  const rows = 7;
+  const cols = 7;
+  const hexW = 80;
+  const hexH = 92;
+  const xStep = hexW * 0.75;  // горизонтальное смещение
+  const yStep = hexH * 0.87;  // вертикальное смещение
+
+  let selectedHex = null;
+  let currentRotation = 0;
+
+  const pieces = [
+    [1,2], [1,3], [1,4],
+    [1,2,3], [1,2,4], [1,2,5],
+    [1,2,4,5], [1,3,4,5],
+    [1,2,3,4,5], [1,2,3,4,5,6]
+  ];
+
+  let nextPiece = randomPiece();
+
+  // --- создание гексагонального поля ---
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const hex = document.createElement("div");
+      hex.classList.add("hex");
+      const x = col * xStep;
+      const y = row * yStep + (col % 2 ? yStep / 2 : 0);
+      hex.style.left = `${x}px`;
+      hex.style.top = `${y}px`;
+      hex.dataset.x = col;
+      hex.dataset.y = row;
+      hex.addEventListener("click", () => selectHex(hex));
+      grid.appendChild(hex);
+    }
+  }
+
+  // динамически устанавливаем размер контейнера
+  grid.style.width = `${cols * xStep + hexW/2}px`;
+  grid.style.height = `${rows * yStep + hexH}px`;
+
+  function selectHex(hex) {
+    if (selectedHex) selectedHex.classList.remove("selected");
+    selectedHex = hex;
+    selectedHex.classList.add("selected");
+  }
+
+  function rotatePiece() {
+    currentRotation = (currentRotation + 60) % 360;
+    nextPieceEl.style.transform = `rotate(${currentRotation}deg)`;
+  }
+
+  function randomPiece() {
+    return pieces[Math.floor(Math.random() * pieces.length)];
+  }
+
+  function placePiece() {
+    if (!selectedHex) return;
+    const part = document.createElement("div");
+    part.classList.add("part");
+    part.style.transform = `rotate(${currentRotation}deg)`;
+    selectedHex.appendChild(part);
+
+    // новая деталь
+    nextPiece = randomPiece();
+    currentRotation = 0;
+    nextPieceEl.style.transform = `rotate(0deg)`;
+  }
+
+  rotateButton.addEventListener("click", rotatePiece);
+  placeButton.addEventListener("click", placePiece);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "r") rotatePiece();
+  });
+</script>
+
+</body>
+</html>
