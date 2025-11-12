@@ -63,6 +63,14 @@
     outline: 3px solid #ff6347;
   }
 
+  .hex-start .hex-inner {
+    background-color: #d9fbe2;
+  }
+
+  .hex-finish .hex-inner {
+    background-color: #ffe5e0;
+  }
+
   .part {
     position: absolute;
     inset: 0;
@@ -163,6 +171,61 @@
     background-color: #ddd;
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   }
+
+  .marker {
+    position: absolute;
+    width: 140px;
+    height: 30px;
+    line-height: 30px;
+    background-color: rgba(255, 99, 71, 0.1);
+    border: 2px dashed #ff6347;
+    border-radius: 16px;
+    font-weight: bold;
+    color: #ff6347;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .marker-start {
+    top: -40px;
+  }
+
+  .marker-finish {
+    bottom: -40px;
+  }
+
+  .connection-status {
+    margin-top: 15px;
+    font-weight: bold;
+    color: #777;
+    min-height: 1.5em;
+    transition: color 0.3s;
+  }
+
+  .connection-status.connected {
+    color: #2f9d5d;
+  }
+
+  @keyframes pathBlink {
+    0%, 100% {
+      opacity: 1;
+      background-color: #66ccff;
+      box-shadow: 0 0 6px 2px rgba(255, 215, 0, 0.6);
+    }
+    50% {
+      opacity: 0.4;
+      background-color: #ffe066;
+      box-shadow: 0 0 14px 4px rgba(255, 215, 0, 1);
+    }
+  }
+
+  .connector.path-highlight,
+  .connector-tip.path-highlight {
+    animation: pathBlink 0.9s ease-in-out infinite;
+    filter: brightness(1.1);
+  }
 </style>
 </head>
 <body>
@@ -181,6 +244,8 @@
       <div id="nextPiece" class="preview-hex"></div>
     </div>
   </div>
+
+  <div id="connectionStatus" class="connection-status"></div>
 </div>
 
 <div class="debug" id="debugPieces"></div>
@@ -191,6 +256,8 @@
   const placeButton = document.getElementById("placeButton");
   const previewContainer = document.getElementById("nextPiece");
   const debugContainer = document.getElementById("debugPieces");
+  const connectionStatusEl = document.getElementById("connectionStatus");
+  const MARKER_WIDTH = 140;
 
   const rows = 9;
   const cols = 9;
@@ -228,6 +295,12 @@
 
   const hexElements = Array.from({ length: rows }, () => Array(cols).fill(null));
   const gridState = Array.from({ length: rows }, () => Array(cols).fill(null));
+  const blockedCells = new Set();
+  let startMarkerEl = null;
+  let finishMarkerEl = null;
+  let startPosition = null;
+  let finishPosition = null;
+  let pathHighlightNodes = new Set();
 
   let nextPiece = randomPiece();
   renderPreview(nextPiece);
@@ -256,6 +329,9 @@
   // динамически устанавливаем размер контейнера
   grid.style.width = `${cols * xStep + hexW/2}px`;
   grid.style.height = `${rows * yStep + hexH}px`;
+  createMarkers();
+  initEndpoints();
+  refreshConnectionState();
 
   function selectHex(hex) {
     if (selectedHex) selectedHex.classList.remove("selected");
@@ -278,6 +354,7 @@
     if (!selectedHex) return;
     const col = Number(selectedHex.dataset.x);
     const row = Number(selectedHex.dataset.y);
+    if (isBlockedCell(row, col)) return;
     const rotationSteps = getCurrentRotationSteps();
     const rotatedDirections = getRotatedDirections(nextPiece, rotationSteps);
     const part = createPieceElement(nextPiece, rotationSteps);
@@ -297,6 +374,7 @@
     nextPiece = randomPiece();
     currentRotation = 0;
     renderPreview(nextPiece);
+    refreshConnectionState();
   }
 
   rotateButton.addEventListener("click", rotatePiece);
@@ -343,6 +421,9 @@
 
   function handleHexClick(hex) {
     selectHex(hex);
+    const col = Number(hex.dataset.x);
+    const row = Number(hex.dataset.y);
+    if (isBlockedCell(row, col)) return;
     placePiece();
   }
 
@@ -366,6 +447,203 @@
       item.appendChild(label);
       debugContainer.appendChild(item);
     });
+  }
+
+  function refreshConnectionState() {
+    const connection = checkConnection();
+    updateConnectionStatus(connection.connected);
+    highlightConnectionPath(connection.segments);
+  }
+
+  function updateConnectionStatus(isConnected) {
+    if (!connectionStatusEl) return;
+    if (isConnected) {
+      connectionStatusEl.textContent = "Старт и финиш соединены!";
+      connectionStatusEl.classList.add("connected");
+    } else {
+      connectionStatusEl.textContent = "Соедините старт и финиш";
+      connectionStatusEl.classList.remove("connected");
+    }
+  }
+
+  function highlightConnectionPath(segments = []) {
+    clearPathHighlights();
+    if (!segments || segments.length === 0) return;
+
+    segments.forEach(({ from, to, direction }) => {
+      const connector = getConnectorElement(from.row, from.col, direction);
+      if (connector) {
+        addHighlight(connector);
+        const tip = connector.querySelector(".connector-tip");
+        addHighlight(tip);
+      }
+
+      const neighbor = to;
+      if (!neighbor || !isInside(neighbor.row, neighbor.col)) return;
+      const opposite = OPPOSITE_DIRECTION[direction];
+      const neighborConnector = getConnectorElement(neighbor.row, neighbor.col, opposite);
+      if (neighborConnector) {
+        addHighlight(neighborConnector);
+        const tip = neighborConnector.querySelector(".connector-tip");
+        addHighlight(tip);
+      }
+    });
+  }
+
+  function addHighlight(node) {
+    if (!node) return;
+    node.classList.add("path-highlight");
+    pathHighlightNodes.add(node);
+  }
+
+  function clearPathHighlights() {
+    pathHighlightNodes.forEach((node) => node.classList.remove("path-highlight"));
+    pathHighlightNodes.clear();
+  }
+
+  function checkConnection() {
+    if (!startPosition || !finishPosition) {
+      return { connected: false, segments: [] };
+    }
+
+    const startKey = cellKey(startPosition.row, startPosition.col);
+    const finishKey = cellKey(finishPosition.row, finishPosition.col);
+    const startState = gridState[startPosition.row]?.[startPosition.col];
+    if (!startState) {
+      return { connected: false, segments: [] };
+    }
+
+    const visited = new Set([startKey]);
+    const queue = [{ row: startPosition.row, col: startPosition.col }];
+    const prev = new Map();
+    prev.set(startKey, null);
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const currentKey = cellKey(current.row, current.col);
+      if (currentKey === finishKey) {
+        const segments = [];
+        let key = finishKey;
+        while (key !== startKey) {
+          const info = prev.get(key);
+          if (!info) {
+            return { connected: false, segments: [] };
+          }
+          const currentCoord = keyToCoord(key);
+          segments.push({
+            from: { row: info.row, col: info.col },
+            to: { row: currentCoord.row, col: currentCoord.col },
+            direction: info.direction,
+          });
+          key = cellKey(info.row, info.col);
+        }
+        segments.reverse();
+        return { connected: true, segments };
+      }
+
+      const currentState = gridState[current.row]?.[current.col];
+      if (!currentState) continue;
+
+      currentState.directions.forEach((direction) => {
+        const neighbor = getNeighborCoord(current.row, current.col, direction);
+        if (!neighbor || !isInside(neighbor.row, neighbor.col)) return;
+        const neighborState = gridState[neighbor.row]?.[neighbor.col];
+        if (!neighborState || !neighborState.directions.includes(OPPOSITE_DIRECTION[direction])) return;
+
+        const neighborKey = cellKey(neighbor.row, neighbor.col);
+        if (visited.has(neighborKey)) return;
+        visited.add(neighborKey);
+        prev.set(neighborKey, { row: current.row, col: current.col, direction });
+        queue.push({ row: neighbor.row, col: neighbor.col });
+      });
+    }
+
+    return { connected: false, segments: [] };
+  }
+
+  function initEndpoints() {
+    const startCol = Math.floor(Math.random() * cols);
+    const finishCol = Math.floor(Math.random() * cols);
+    placeEndpoint(0, startCol, [4], "start");
+    placeEndpoint(rows - 1, finishCol, [1], "finish");
+  }
+
+  function placeEndpoint(row, col, directions, type) {
+    if (!isInside(row, col)) return;
+    const hex = hexElements[row][col];
+    if (!hex) return;
+    const inner = hex.querySelector(".hex-inner");
+    inner.innerHTML = "";
+
+    const part = createPieceElement(directions, 0);
+    part.style.transform = "rotate(0deg)";
+    inner.appendChild(part);
+
+    const endpointState = {
+      piece: directions.slice(),
+      rotation: 0,
+      directions: directions.slice(),
+      endpoint: type,
+    };
+    gridState[row][col] = endpointState;
+
+    if (type === "start") {
+      hex.classList.add("hex-start");
+      startPosition = { row, col };
+      positionMarker(startMarkerEl, row, col);
+    } else {
+      hex.classList.add("hex-finish");
+      finishPosition = { row, col };
+      positionMarker(finishMarkerEl, row, col);
+    }
+
+    markBlocked(row, col);
+    updateConnectionsAround(row, col);
+    refreshConnectionState();
+  }
+
+  function createMarkers() {
+    const existingMarkers = grid.querySelectorAll(".marker");
+    existingMarkers.forEach((node) => node.remove());
+
+    startMarkerEl = document.createElement("div");
+    startMarkerEl.classList.add("marker", "marker-start");
+    startMarkerEl.textContent = "Старт";
+    grid.appendChild(startMarkerEl);
+
+    finishMarkerEl = document.createElement("div");
+    finishMarkerEl.classList.add("marker", "marker-finish");
+    finishMarkerEl.textContent = "Финиш";
+    grid.appendChild(finishMarkerEl);
+  }
+
+  function positionMarker(markerEl, row, col) {
+    if (!markerEl) return;
+    const hex = hexElements[row][col];
+    if (!hex) return;
+    const left = parseFloat(hex.style.left) || 0;
+    const gridWidth = cols * xStep + hexW / 2;
+    const markerWidth = markerEl.offsetWidth || MARKER_WIDTH;
+    let markerLeft = left + hexW / 2 - markerWidth / 2;
+    markerLeft = Math.max(0, Math.min(markerLeft, gridWidth - markerWidth));
+    markerEl.style.left = `${markerLeft}px`;
+  }
+
+  function markBlocked(row, col) {
+    blockedCells.add(cellKey(row, col));
+  }
+
+  function isBlockedCell(row, col) {
+    return blockedCells.has(cellKey(row, col));
+  }
+
+  function cellKey(row, col) {
+    return `${row},${col}`;
+  }
+
+  function keyToCoord(key) {
+    const [row, col] = key.split(",").map(Number);
+    return { row, col };
   }
 
   function getRotatedDirections(pieceDefinition, rotationSteps = 0) {
@@ -467,6 +745,14 @@
 
   function isInside(row, col) {
     return row >= 0 && row < rows && col >= 0 && col < cols;
+  }
+
+  function unblockCell(row, col) {
+    blockedCells.delete(`${row},${col}`);
+    const hex = hexElements[row][col];
+    if (hex) {
+      hex.classList.remove("blocked");
+    }
   }
 </script>
 
