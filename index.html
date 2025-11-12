@@ -65,13 +65,10 @@
 
   .part {
     position: absolute;
-    width: 50%;
-    height: 50%;
-    background-color: #66ccff;
-    border-radius: 50%;
-    top: 25%;
-    left: 25%;
+    inset: 0;
+    transform-origin: 50% 50%;
     transition: transform 0.3s;
+    pointer-events: none;
   }
 
   .controls {
@@ -97,10 +94,66 @@
     margin-top: 10px;
   }
 
-  .preview .part {
+  .connector {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 34px;
     background-color: #66ccff;
+    border-radius: 7px;
+    transform-origin: 50% 100%;
   }
 
+  .connector-tip {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background-color: inherit;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -100%);
+    border-radius: 4px;
+  }
+
+  .piece-center {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #66ccff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .debug {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .debug-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .debug-label {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .debug-hex {
+    position: relative;
+    width: 80px;
+    height: 75px;
+    background-color: #ddd;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
 </style>
 </head>
 <body>
@@ -116,18 +169,19 @@
     <button id="placeButton">Поставить деталь</button>
     <div class="preview">
       <span>Следующая деталь:</span>
-      <div id="nextPiece" class="preview-hex">
-        <div class="part"></div>
-      </div>
+      <div id="nextPiece" class="preview-hex"></div>
     </div>
   </div>
 </div>
+
+<div class="debug" id="debugPieces"></div>
 
 <script>
   const grid = document.getElementById("grid");
   const rotateButton = document.getElementById("rotateButton");
   const placeButton = document.getElementById("placeButton");
-  const nextPieceEl = document.getElementById("nextPiece").querySelector(".part");
+  const previewContainer = document.getElementById("nextPiece");
+  const debugContainer = document.getElementById("debugPieces");
 
   const rows = 7;
   const cols = 7;
@@ -135,9 +189,18 @@
   const hexH = 73;
   const xStep = hexW * 0.75;  // горизонтальное смещение
   const yStep = hexH;         // вертикальное смещение
+  const DIRECTION_ANGLES = {
+    1: 0,
+    2: 60,
+    3: 120,
+    4: 180,
+    5: 240,
+    6: 300,
+  };
 
   let selectedHex = null;
   let currentRotation = 0;
+  let previewPart = null;
 
   const pieces = [
     [1,2], [1,3], [1,4],
@@ -147,6 +210,8 @@
   ];
 
   let nextPiece = randomPiece();
+  renderPreview(nextPiece);
+  renderDebugPieces();
 
   // --- создание гексагонального поля ---
   for (let row = 0; row < rows; row++) {
@@ -179,7 +244,9 @@
 
   function rotatePiece() {
     currentRotation = (currentRotation + 60) % 360;
-    nextPieceEl.style.transform = `rotate(${currentRotation}deg)`;
+    if (previewPart) {
+      previewPart.style.transform = `rotate(${currentRotation}deg)`;
+    }
   }
 
   function randomPiece() {
@@ -188,16 +255,16 @@
 
   function placePiece() {
     if (!selectedHex) return;
-    const part = document.createElement("div");
-    part.classList.add("part");
+    const part = createPieceElement(nextPiece);
     part.style.transform = `rotate(${currentRotation}deg)`;
     const inner = selectedHex.querySelector(".hex-inner");
+    inner.innerHTML = "";
     inner.appendChild(part);
 
     // новая деталь
     nextPiece = randomPiece();
     currentRotation = 0;
-    nextPieceEl.style.transform = `rotate(0deg)`;
+    renderPreview(nextPiece);
   }
 
   rotateButton.addEventListener("click", rotatePiece);
@@ -206,6 +273,58 @@
   document.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "r") rotatePiece();
   });
+
+  function createPieceElement(pieceDefinition) {
+    const part = document.createElement("div");
+    part.classList.add("part");
+    pieceDefinition.forEach((direction) => {
+      const connector = document.createElement("div");
+      connector.classList.add("connector");
+      const angle = DIRECTION_ANGLES[direction] || 0;
+      connector.style.transform = `translate(-50%, 0) rotate(${angle}deg)`;
+
+      const tip = document.createElement("div");
+      tip.classList.add("connector-tip");
+      connector.appendChild(tip);
+
+      part.appendChild(connector);
+    });
+
+    const center = document.createElement("div");
+    center.classList.add("piece-center");
+    part.appendChild(center);
+
+    return part;
+  }
+
+  function renderPreview(pieceDefinition) {
+    previewContainer.innerHTML = "";
+    previewPart = createPieceElement(pieceDefinition);
+    previewPart.style.transform = `rotate(${currentRotation}deg)`;
+    previewContainer.appendChild(previewPart);
+  }
+
+  function renderDebugPieces() {
+    if (!debugContainer) return;
+    debugContainer.innerHTML = "";
+    pieces.forEach((pieceDefinition, index) => {
+      const item = document.createElement("div");
+      item.classList.add("debug-item");
+
+      const label = document.createElement("div");
+      label.classList.add("debug-label");
+      label.textContent = `Вариант ${index + 1}: [${pieceDefinition.join(",")}]`;
+
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("debug-hex");
+      const part = createPieceElement(pieceDefinition);
+      wrapper.appendChild(part);
+
+      item.appendChild(wrapper);
+      item.appendChild(label);
+      debugContainer.appendChild(item);
+    });
+  }
 </script>
 
 </body>
