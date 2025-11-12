@@ -186,7 +186,7 @@
 
   .debug {
     margin-top: 30px;
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     gap: 20px;
     justify-content: center;
@@ -416,8 +416,8 @@
   <div id="grid" class="hex-grid"></div>
 
   <div class="controls">
-    <button id="rotateButton">Повернуть (R)</button>
-    <button id="placeButton">Поставить деталь</button>
+    <!--<button id="rotateButton">Повернуть (R)</button>-->
+    <!--<button id="placeButton">Поставить деталь</button>-->
     <div class="preview">
       <span>Следующая деталь:</span>
       <div id="nextPiece" class="preview-hex"></div>
@@ -593,8 +593,8 @@
     advanceTurn();
   }
 
-  rotateButton.addEventListener("click", rotatePiece);
-  placeButton.addEventListener("click", placePiece);
+   // rotateButton.addEventListener("click", rotatePiece);
+   // placeButton.addEventListener("click", placePiece);
   previewContainer.addEventListener("click", rotatePiece);
 
   document.addEventListener("keydown", (e) => {
