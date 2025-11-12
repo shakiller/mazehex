@@ -750,17 +750,42 @@
   }
 
   function initEndpointsForPlayers() {
-    players.forEach((player) => {
-      placeEndpointForPlayer(player, "start");
-    });
-    players.forEach((player) => {
-      placeEndpointForPlayer(player, "finish");
-    });
+    if (players.length === 1) {
+      const player = players[0];
+      const corners = getCornerCells();
+      placeEndpointAtCorner(player, "start", corners.topLeft);
+      placeEndpointAtCorner(player, "finish", corners.bottomRight);
+    } else if (players.length === 2) {
+      const corners = getCornerCells();
+      const player1 = players[0];
+      const player2 = players[1];
+      
+      placeEndpointAtCorner(player1, "start", corners.topLeft);
+      placeEndpointAtCorner(player1, "finish", corners.bottomRight);
+      
+      placeEndpointAtCorner(player2, "start", corners.bottomLeft);
+      placeEndpointAtCorner(player2, "finish", corners.topRight);
+    }
   }
 
-  function placeEndpointForPlayer(player, kind) {
+  function getCornerCells() {
+    return {
+      topLeft: { row: 0, col: 0 },
+      topRight: { row: 0, col: cols - 1 },
+      bottomLeft: { row: rows - 1, col: 0 },
+      bottomRight: { row: rows - 1, col: cols - 1 }
+    };
+  }
+
+  function placeEndpointAtCorner(player, kind, corner) {
     const edge = kind === "start" ? player.startEdge : player.finishEdge;
-    const { row, col, direction } = getRandomEdgeCell(edge);
+    const direction = EDGE_DIRECTIONS[edge] || 4;
+    const { row, col } = corner;
+    
+    if (isBlockedCell(row, col)) {
+      return;
+    }
+    
     const hex = hexElements[row][col];
     if (!hex) return;
 
